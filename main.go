@@ -1,25 +1,24 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
-	handlers "github.com/alifudin-a/todo-app/handlers/todo"
+	"github.com/alifudin-a/todo-app/api"
+	db "github.com/alifudin-a/todo-app/db/sqlc"
 	"github.com/alifudin-a/todo-app/util"
-	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 func main() {
 	util.LoadEnv()
-	r := gin.Default()
+	conn := db.OpenDBConn()
 
-	r.GET("/todo", handlers.GetTodoList)
-	r.POST("/todo", handlers.AddTodo)
-	r.DELETE("/todo/:id", handlers.DeleteTodo)
-	r.PUT("/todo", handlers.CompleteTodo)
+	todo := db.NewTodo(conn)
+	server := api.NewServer(todo)
 
-	err := r.Run(":" + os.Getenv("TODO_APP_ADDRESS"))
+	err := server.Start(os.Getenv("TODO_APP_ADDRESS"))
 	if err != nil {
-		fmt.Println("Unable to start ", err)
+		log.Fatal("Unable to start server: ", err)
 	}
 }
