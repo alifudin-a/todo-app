@@ -32,3 +32,102 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, e
 	)
 	return i, err
 }
+
+const deleteTask = `-- name: DeleteTask :exec
+DELETE FROM tasks
+WHERE id = $1
+`
+
+func (q *Queries) DeleteTask(ctx context.Context, id int32) error {
+	_, err := q.exec(ctx, q.deleteTaskStmt, deleteTask, id)
+	return err
+}
+
+const getTask = `-- name: GetTask :one
+SELECT id, title, description, complete FROM tasks 
+WHERE id = $1
+`
+
+func (q *Queries) GetTask(ctx context.Context, id int32) (Task, error) {
+	row := q.queryRow(ctx, q.getTaskStmt, getTask, id)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Complete,
+	)
+	return i, err
+}
+
+const listTasks = `-- name: ListTasks :many
+SELECT id, title, description, complete FROM tasks 
+ORDER BY id 
+LIMIT $1 OFFSET $2
+`
+
+type ListTasksParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]Task, error) {
+	rows, err := q.query(ctx, q.listTasksStmt, listTasks, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Task{}
+	for rows.Next() {
+		var i Task
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.Complete,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateTask = `-- name: UpdateTask :one
+UPDATE tasks
+SET title = $2,
+    "description" = $3,
+    complete = $4
+WHERE id = $1
+RETURNING id, title, description, complete
+`
+
+type UpdateTaskParams struct {
+	ID          int32  `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Complete    string `json:"complete"`
+}
+
+func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (Task, error) {
+	row := q.queryRow(ctx, q.updateTaskStmt, updateTask,
+		arg.ID,
+		arg.Title,
+		arg.Description,
+		arg.Complete,
+	)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Complete,
+	)
+	return i, err
+}

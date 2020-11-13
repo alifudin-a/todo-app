@@ -25,6 +25,18 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createTaskStmt, err = db.PrepareContext(ctx, createTask); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateTask: %w", err)
 	}
+	if q.deleteTaskStmt, err = db.PrepareContext(ctx, deleteTask); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteTask: %w", err)
+	}
+	if q.getTaskStmt, err = db.PrepareContext(ctx, getTask); err != nil {
+		return nil, fmt.Errorf("error preparing query GetTask: %w", err)
+	}
+	if q.listTasksStmt, err = db.PrepareContext(ctx, listTasks); err != nil {
+		return nil, fmt.Errorf("error preparing query ListTasks: %w", err)
+	}
+	if q.updateTaskStmt, err = db.PrepareContext(ctx, updateTask); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateTask: %w", err)
+	}
 	return &q, nil
 }
 
@@ -33,6 +45,26 @@ func (q *Queries) Close() error {
 	if q.createTaskStmt != nil {
 		if cerr := q.createTaskStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createTaskStmt: %w", cerr)
+		}
+	}
+	if q.deleteTaskStmt != nil {
+		if cerr := q.deleteTaskStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteTaskStmt: %w", cerr)
+		}
+	}
+	if q.getTaskStmt != nil {
+		if cerr := q.getTaskStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getTaskStmt: %w", cerr)
+		}
+	}
+	if q.listTasksStmt != nil {
+		if cerr := q.listTasksStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listTasksStmt: %w", cerr)
+		}
+	}
+	if q.updateTaskStmt != nil {
+		if cerr := q.updateTaskStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateTaskStmt: %w", cerr)
 		}
 	}
 	return err
@@ -75,6 +107,10 @@ type Queries struct {
 	db             DBTX
 	tx             *sql.Tx
 	createTaskStmt *sql.Stmt
+	deleteTaskStmt *sql.Stmt
+	getTaskStmt    *sql.Stmt
+	listTasksStmt  *sql.Stmt
+	updateTaskStmt *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -82,5 +118,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		db:             tx,
 		tx:             tx,
 		createTaskStmt: q.createTaskStmt,
+		deleteTaskStmt: q.deleteTaskStmt,
+		getTaskStmt:    q.getTaskStmt,
+		listTasksStmt:  q.listTasksStmt,
+		updateTaskStmt: q.updateTaskStmt,
 	}
 }
