@@ -17,6 +17,7 @@ func NewServer(todo *db.Todo) *Server {
 	router := gin.Default()
 
 	router.POST("/todo", server.createTask)
+	router.GET("/todo", server.listTasks)
 
 	server.router = router
 	return server

@@ -36,3 +36,30 @@ func (server *Server) createTask(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, map[string]interface{}{"task": task})
 }
+
+type listTasksReq struct {
+	Limit  int32 `form:"limit" binding:"required,min=1"`
+	Offset int32 `form:"offset" binding:"required,min=1,max=10"`
+}
+
+func (server *Server) listTasks(ctx *gin.Context) {
+	var req listTasksReq
+	err := ctx.ShouldBindQuery(&req)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.ListTasksParams{
+		Limit:  req.Limit,
+		Offset: (req.Offset - 1) * req.Limit,
+	}
+
+	list, err := server.todo.ListTasks(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{"list_tasks": list})
+}
