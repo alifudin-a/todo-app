@@ -99,7 +99,6 @@ func (server *Server) deleteTask(ctx *gin.Context) {
 	var req deleteTaskReq
 	err := ctx.ShouldBindUri(&req)
 	if err != nil {
-
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
