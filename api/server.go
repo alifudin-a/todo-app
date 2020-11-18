@@ -18,6 +18,9 @@ func NewServer(todo *db.Todo) *Server {
 
 	router.POST("/todo", server.createTask)
 	router.GET("/todo", server.listTasks)
+	router.GET("/todo/:id", server.getTask)
+	router.DELETE("/todo/:id", server.deleteTask)
+	router.PUT("/todo", server.updateTask)
 
 	server.router = router
 	return server
